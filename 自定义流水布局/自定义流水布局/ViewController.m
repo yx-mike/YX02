@@ -27,8 +27,8 @@ static NSString * const CYPhotoId = @"photo";
     
     // 创建布局
     CYLineLayout *layout = [[CYLineLayout alloc] init];
-    layout.minScale = 0.7;
-    layout.maxTranslationX = 38;
+    layout.minScale = 0.8;
+    layout.maxPaddingX = 50;
     layout.itemSize = CGSizeMake(collectionCellWidth, 285);
     
     // 创建CollectionView

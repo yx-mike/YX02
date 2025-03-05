@@ -13,9 +13,6 @@
 
 @property (nonatomic, assign) CGFloat maxDeltaABS;
 
-/// 卡片到屏幕边上的距离
-@property (nonatomic, assign) CGFloat maxInset;
-
 @end
 
 @implementation CYLineLayout
@@ -24,7 +21,7 @@
 {
     self = [super init];
     if (self) {
-        self.minScale = 0.7;
+        self.minScale = 0.8;
     }
     return self;
 }
@@ -63,14 +60,9 @@
     
     self.maxDeltaABS = self.minimumLineSpacing + cellWidth;
     
-    if (self.maxTranslationX > inset) {
-        self.maxTranslationX = inset - 10;
-        
-        if (self.maxTranslationX < 0) {
-            self.maxTranslationX = inset / 2;
-        }
+    if (self.maxPaddingX >= inset) {
+        self.maxPaddingX = inset / 2;
     }
-    self.maxInset = inset;
 }
 
 /**
@@ -103,7 +95,6 @@
             topAttrs = attrs;
         }
         
-        CGPoint oldOrigin = attrs.frame.origin;
         CGSize oldSize = attrs.frame.size;
         
         CGFloat a = deltaABS / self.maxDeltaABS;
@@ -119,15 +110,15 @@
         // 设置缩放比例
         CGAffineTransform scaleTF = CGAffineTransformMakeScale(scale, scale);
         
-        CGFloat maxTranslationX = self.maxInset - self.maxTranslationX;
+        CGFloat maxTranslationX = self.maxPaddingX;
         CGFloat translationX = 0;
         if (delta > 0) {
-            translationX = a * (maxTranslationX - (oldSize.width - size.width) * 0.5);
+            translationX = a * maxTranslationX - (oldSize.width - size.width) * 0.5;
         } else if (delta == 0) {
             translationX = 0;
             b = 0;
         } else {
-            translationX = a * ((oldSize.width - size.width) * 0.5 - maxTranslationX);
+            translationX = (oldSize.width - size.width) * 0.5 - a * maxTranslationX;
         }
         /// 补偿，防止后面的cell靠太近
         CGFloat translationXE = b * scale * (delta > 0 ? 1 : -1);

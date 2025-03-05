@@ -10,8 +10,9 @@
 
 @interface CYLineLayout : UICollectionViewFlowLayout
 
+/// 剧中卡片的左右两边的卡片缩放限制
 @property (nonatomic, assign) CGFloat minScale;
-/// 卡片透出的大小
-@property (nonatomic, assign) CGFloat maxTranslationX;
+/// 剧中卡片的左右两边的卡片的间距
+@property (nonatomic, assign) CGFloat maxPaddingX;
 
 @end
