@@ -11,6 +11,7 @@
 @interface CYLineLayout : UICollectionViewFlowLayout
 
 @property (nonatomic, assign) CGFloat minScale;
+/// 卡片透出的大小
 @property (nonatomic, assign) CGFloat maxTranslationX;
 
 @end

@@ -55,10 +55,10 @@
     CGFloat inset = (collectionWidth - cellWidth) * 0.5;
     self.sectionInset = UIEdgeInsetsMake(0, inset, 0, inset);
 
-    self.minimumLineSpacing = inset;
+    self.minimumLineSpacing = 0;
     self.minimumInteritemSpacing = 0;
     
-    self.maxDeltaABS = cellWidth + inset;
+    self.maxDeltaABS = self.minimumLineSpacing + cellWidth;
     
     if (self.maxTranslationX > inset) {
         self.maxTranslationX = inset;
@@ -99,8 +99,10 @@
         CGSize oldSize = attrs.frame.size;
         
         CGFloat a = deltaABS / self.maxDeltaABS;
+        CGFloat b = 0;
         if (a > 1) {
             a = 1;
+            b = deltaABS - self.maxDeltaABS;
         }
         
         CGFloat scale = 1 - (1 - self.minScale) * a;
@@ -108,25 +110,13 @@
         if (attrs.indexPath.row == 3) {
             NSLog(@"yx02: card(%ld)-delta=%f", (long)attrs.indexPath.row, delta);
             NSLog(@"yx02: card(%ld)-frame=%@", (long)attrs.indexPath.row, NSStringFromCGRect(attrs.frame));
-            NSLog(@"yx02: card(%ld)-a=%f", (long)attrs.indexPath.row, a);
-            NSLog(@"yx02: card(%ld)-scale=%f", (long)attrs.indexPath.row, scale);
         }
         
-        // 新的size
-        CGSize size = CGSizeMake(oldSize.width * scale, oldSize.height * scale);
-        // 没有布局之前的原点
-        CGPoint origin = CGPointMake(oldOrigin.x, oldOrigin.y);
-        
-        /// 计算布局
-        if (delta > 0) {
-            origin.x = oldOrigin.x - a * self.maxTranslationX;
-            origin.y = origin.y + (oldSize.height - size.height) * 0.5;
-        } else {
-            origin.x = oldOrigin.x + (oldSize.width - size.width) + a * self.maxTranslationX;
-            origin.y = origin.y + (oldSize.height - size.height) * 0.5;
-        }
-        
-        attrs.frame = CGRectMake(origin.x, origin.y, size.width, size.height);
+        // 设置缩放比例
+        CGAffineTransform scaleTF = CGAffineTransformMakeScale(scale, scale);
+        // 设置平移
+        CGAffineTransform translationTF = CGAffineTransformMakeTranslation(0, 0);
+        attrs.transform = CGAffineTransformConcat(scaleTF, translationTF);
     }
     
     topAttrs.zIndex = 1;
