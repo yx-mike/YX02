@@ -8,6 +8,13 @@
 
 #import "CYLineLayout.h"
 
+
+@interface CYLineLayout ()
+
+@property (nonatomic, assign) CGFloat maxDeltaABS;
+
+@end
+
 @implementation CYLineLayout
 
 - (instancetype)init
@@ -41,17 +48,21 @@
     // 水平滚动
     self.scrollDirection = UICollectionViewScrollDirectionHorizontal;
     
-    // 设置内边距
-    CGFloat inset = (self.collectionView.frame.size.width - self.itemSize.width) * 0.5;
-    self.sectionInset = UIEdgeInsetsMake(0, inset, 0, inset);
-
-    self.minimumLineSpacing = 0;
-    self.minimumInteritemSpacing = 0;
-    
+    CGFloat collectionWidth = self.collectionView.frame.size.width;
     CGFloat cellWidth = self.itemSize.width;
     
-    /// 两个cell中，两个图片的间距
-    self.maxTranslationX = (cellWidth - self.cellContentWidth) * 0.81;
+    // 设置内边距
+    CGFloat inset = (collectionWidth - cellWidth) * 0.5;
+    self.sectionInset = UIEdgeInsetsMake(0, inset, 0, inset);
+
+    self.minimumLineSpacing = inset;
+    self.minimumInteritemSpacing = 0;
+    
+    self.maxDeltaABS = cellWidth + inset;
+    
+    if (self.maxTranslationX > inset) {
+        self.maxTranslationX = inset;
+    }
 }
 
 /**
@@ -68,12 +79,6 @@
     // 获得super已经计算好的布局属性
     NSArray *array = [super layoutAttributesForElementsInRect:rect];
     
-    CGFloat collectionWidth = self.collectionView.frame.size.width;
-    
-    
-    // 计算collectionView最中心点的x值
-    CGFloat centerX = self.collectionView.contentOffset.x + collectionWidth * 0.5;
-    
     CGFloat minDeltaABS = MAXFLOAT;
     UICollectionViewLayoutAttributes *topAttrs;
     
@@ -82,37 +87,46 @@
         attrs.zIndex = 0;
         
         // cell的中心点x 和 collectionView最中心点的x值 的间距
-        CGFloat delta = attrs.center.x - centerX;
+        CGFloat delta = attrs.center.x - (self.collectionView.contentOffset.x + self.collectionView.frame.size.width * 0.5);
         CGFloat deltaABS = ABS(delta);
-        
-        if (attrs.indexPath.row == 1) {
-//            NSLog(@"yx02: card(1)-delta=%f", delta);
-            NSLog(@"yx02: card(1)-frame=%@", NSStringFromCGRect(attrs.frame));
-        }
         
         if (!topAttrs || deltaABS < minDeltaABS) {
             minDeltaABS = deltaABS;
             topAttrs = attrs;
         }
         
-        CGFloat scale = 1;
-        CGFloat translationX = 0;
-        if (deltaABS >= collectionWidth) {
-            scale = self.minScale;
-            translationX = self.maxTranslationX * (delta > 0 ? -1 : 1);
-        } else {
-            CGFloat a = deltaABS / collectionWidth;
-            
-            scale = 1 - (1 - self.minScale) * a;
-            translationX = a * self.maxTranslationX * (delta > 0 ? -1 : 1);
+        CGPoint oldOrigin = attrs.frame.origin;
+        CGSize oldSize = attrs.frame.size;
+        
+        CGFloat a = deltaABS / self.maxDeltaABS;
+        if (a > 1) {
+            a = 1;
         }
         
-        // 设置缩放比例
-        CGAffineTransform scaleTF = CGAffineTransformMakeScale(scale, scale);
-        // 设置平移
-        CGAffineTransform translationTF = CGAffineTransformMakeTranslation(translationX, 0);
+        CGFloat scale = 1 - (1 - self.minScale) * a;
         
-        attrs.transform = CGAffineTransformConcat(scaleTF, translationTF);
+        if (attrs.indexPath.row == 3) {
+            NSLog(@"yx02: card(%ld)-delta=%f", (long)attrs.indexPath.row, delta);
+            NSLog(@"yx02: card(%ld)-frame=%@", (long)attrs.indexPath.row, NSStringFromCGRect(attrs.frame));
+            NSLog(@"yx02: card(%ld)-a=%f", (long)attrs.indexPath.row, a);
+            NSLog(@"yx02: card(%ld)-scale=%f", (long)attrs.indexPath.row, scale);
+        }
+        
+        // 新的size
+        CGSize size = CGSizeMake(oldSize.width * scale, oldSize.height * scale);
+        // 没有布局之前的原点
+        CGPoint origin = CGPointMake(oldOrigin.x, oldOrigin.y);
+        
+        /// 计算布局
+        if (delta > 0) {
+            origin.x = oldOrigin.x - a * self.maxTranslationX;
+            origin.y = origin.y + (oldSize.height - size.height) * 0.5;
+        } else {
+            origin.x = oldOrigin.x + (oldSize.width - size.width) + a * self.maxTranslationX;
+            origin.y = origin.y + (oldSize.height - size.height) * 0.5;
+        }
+        
+        attrs.frame = CGRectMake(origin.x, origin.y, size.width, size.height);
     }
     
     topAttrs.zIndex = 1;
@@ -122,7 +136,7 @@
 
 /**
  * 这个方法的返回值，就决定了collectionView停止滚动时的偏移量
- 
+ * 停止滚动后，定位一个最近的cell，让其剧中
  */
 - (CGPoint)targetContentOffsetForProposedContentOffset:(CGPoint)proposedContentOffset withScrollingVelocity:(CGPoint)velocity
 {

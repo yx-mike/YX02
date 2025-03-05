@@ -10,10 +10,7 @@
 
 @interface CYLineLayout : UICollectionViewFlowLayout
 
-/// cell中，内容的宽度，用来计算间距
-@property (nonatomic, assign) CGFloat cellContentWidth;
 @property (nonatomic, assign) CGFloat minScale;
-
 @property (nonatomic, assign) CGFloat maxTranslationX;
 
 @end

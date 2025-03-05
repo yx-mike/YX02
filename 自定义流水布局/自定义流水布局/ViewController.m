@@ -23,12 +23,12 @@ static NSString * const CYPhotoId = @"photo";
     CGFloat collectionWidth = self.view.frame.size.width;
     CGFloat collectionHeight = 315;
     
-    CGFloat collectionCellWidth = collectionWidth;
+    CGFloat collectionCellWidth = 190;
     
     // 创建布局
     CYLineLayout *layout = [[CYLineLayout alloc] init];
-    layout.cellContentWidth = 190;
     layout.minScale = 0.7;
+    layout.maxTranslationX = 38;
     layout.itemSize = CGSizeMake(collectionCellWidth, 285);
     
     // 创建CollectionView
@@ -36,7 +36,7 @@ static NSString * const CYPhotoId = @"photo";
     UICollectionView *collectionView = [[UICollectionView alloc] initWithFrame:frame collectionViewLayout:layout];
     collectionView.dataSource = self;
     collectionView.delegate = self;
-    collectionView.pagingEnabled = YES;
+//    collectionView.pagingEnabled = YES;
     [self.view addSubview:collectionView];
     
     // 注册
