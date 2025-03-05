@@ -13,6 +13,9 @@
 
 @property (nonatomic, assign) CGFloat maxDeltaABS;
 
+/// 卡片到屏幕边上的距离
+@property (nonatomic, assign) CGFloat maxInset;
+
 @end
 
 @implementation CYLineLayout
@@ -61,8 +64,13 @@
     self.maxDeltaABS = self.minimumLineSpacing + cellWidth;
     
     if (self.maxTranslationX > inset) {
-        self.maxTranslationX = inset;
+        self.maxTranslationX = inset - 10;
+        
+        if (self.maxTranslationX < 0) {
+            self.maxTranslationX = inset / 2;
+        }
     }
+    self.maxInset = inset;
 }
 
 /**
@@ -106,17 +114,32 @@
         }
         
         CGFloat scale = 1 - (1 - self.minScale) * a;
+        // 新的size
+        CGSize size = CGSizeMake(oldSize.width * scale, oldSize.height * scale);
+        // 设置缩放比例
+        CGAffineTransform scaleTF = CGAffineTransformMakeScale(scale, scale);
+        
+        CGFloat maxTranslationX = self.maxInset - self.maxTranslationX;
+        CGFloat translationX = 0;
+        if (delta > 0) {
+            translationX = a * (maxTranslationX - (oldSize.width - size.width) * 0.5);
+        } else if (delta == 0) {
+            translationX = 0;
+            b = 0;
+        } else {
+            translationX = a * ((oldSize.width - size.width) * 0.5 - maxTranslationX);
+        }
+        /// 补偿，防止后面的cell靠太近
+        CGFloat translationXE = b * scale * (delta > 0 ? 1 : -1);
+        // 设置平移
+        CGAffineTransform translationTF = CGAffineTransformMakeTranslation(translationX + translationXE, 0);
+        
+        attrs.transform = CGAffineTransformConcat(scaleTF, translationTF);
         
         if (attrs.indexPath.row == 3) {
             NSLog(@"yx02: card(%ld)-delta=%f", (long)attrs.indexPath.row, delta);
             NSLog(@"yx02: card(%ld)-frame=%@", (long)attrs.indexPath.row, NSStringFromCGRect(attrs.frame));
         }
-        
-        // 设置缩放比例
-        CGAffineTransform scaleTF = CGAffineTransformMakeScale(scale, scale);
-        // 设置平移
-        CGAffineTransform translationTF = CGAffineTransformMakeTranslation(0, 0);
-        attrs.transform = CGAffineTransformConcat(scaleTF, translationTF);
     }
     
     topAttrs.zIndex = 1;
