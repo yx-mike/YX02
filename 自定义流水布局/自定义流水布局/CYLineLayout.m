@@ -131,6 +131,7 @@
         }
         /// 补偿，防止后面的cell靠太近
         CGFloat translationXE = b * scale * (delta > 0 ? 1 : -1);
+        translationXE = 0;
         // 设置平移
         CGAffineTransform translationTF = CGAffineTransformMakeTranslation(translationX + translationXE, 0);
         
